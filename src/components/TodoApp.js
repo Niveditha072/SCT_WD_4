@@ -12,7 +12,8 @@ const TodoApp = () => {
   const [filter, setFilter] = useState('all');
   const [darkMode, setDarkMode] = useState(false); // Dark mode toggle
 
-  const API = 'http://localhost:5000/tasks';
+  const API = 'https://sct-wd-4-todo-backend.onrender.com/tasks';
+
 
   useEffect(() => {
     const fetchTasks = async () => {
