@@ -1,15 +1,15 @@
-// server/server.js
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const Task = require('./models/Task');
+require('dotenv').config();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Connect to MongoDB
-mongoose.connect('mongodb://127.0.0.1:27017/todo_app', {
+// Connect to MongoDB Atlas
+mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
@@ -38,4 +38,6 @@ app.delete('/tasks/:id', async (req, res) => {
   res.json({ success: true });
 });
 
-app.listen(5000, () => console.log('🚀 Server running on http://localhost:5000'));
+// Dynamic port for Render
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
