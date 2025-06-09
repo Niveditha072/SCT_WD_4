@@ -3,18 +3,14 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const Task = require('./models/Task');
 
-
 const app = express();
 app.use(cors());
 app.use(express.json());
 
 // Connect to MongoDB Atlas
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => console.log("✅ MongoDB Connected"))
-.catch(err => console.error("❌ Mongo Error:", err));
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log("✅ MongoDB Connected"))
+  .catch(err => console.error("❌ Mongo Error:", err));
 
 // Routes
 app.get('/tasks', async (req, res) => {
