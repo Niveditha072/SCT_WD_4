@@ -5,15 +5,23 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Sun, Moon } from 'lucide-react';
 
+// Loader Component inside same file (for simplicity)
+const Loader = () => (
+  <div className="loader-container">
+    <div className="spinner"></div>
+    <p>Loading...</p>
+  </div>
+);
+
 const TodoApp = () => {
   const [task, setTask] = useState('');
   const [dateTime, setDateTime] = useState('');
   const [tasks, setTasks] = useState([]);
   const [filter, setFilter] = useState('all');
-  const [darkMode, setDarkMode] = useState(false); // Dark mode toggle
+  const [darkMode, setDarkMode] = useState(false);
+  const [loading, setLoading] = useState(true); // loading state added
 
   const API = 'https://sct-wd-4-todo-backend.onrender.com/tasks';
-
 
   useEffect(() => {
     const fetchTasks = async () => {
@@ -22,6 +30,8 @@ const TodoApp = () => {
         setTasks(res.data);
       } catch (err) {
         console.error('Error fetching tasks:', err);
+      } finally {
+        setLoading(false);
       }
     };
     fetchTasks();
@@ -98,107 +108,85 @@ const TodoApp = () => {
         </button>
       </div>
 
-      <div className="input-section">
-        <input
-          type="text"
-          placeholder="Enter a task..."
-          value={task}
-          onChange={(e) => setTask(e.target.value)}
-        />
-        <input
-          type="datetime-local"
-          value={dateTime}
-          onChange={(e) => setDateTime(e.target.value)}
-        />
-        <button onClick={handleAddTask}>Add</button>
-      </div>
-
-      <div className="filter-section">
-        <button
-          onClick={() => setFilter('all')}
-          className={filter === 'all' ? 'active-filter' : ''}
-        >
-          All
-        </button>
-        <button
-          onClick={() => setFilter('completed')}
-          className={filter === 'completed' ? 'active-filter' : ''}
-        >
-          Completed
-        </button>
-        <button
-          onClick={() => setFilter('pending')}
-          className={filter === 'pending' ? 'active-filter' : ''}
-        >
-          Pending
-        </button>
-      </div>
-
-      <ul className="task-list">
-        {filteredTasks.map((item) => (
-          <li key={item._id}>
+      {loading ? (
+        <Loader />
+      ) : (
+        <>
+          <div className="input-section">
             <input
-              type="checkbox"
-              checked={item.completed}
-              onChange={() => toggleCompleted(item._id)}
+              type="text"
+              placeholder="Enter a task..."
+              value={task}
+              onChange={(e) => setTask(e.target.value)}
             />
+            <input
+              type="datetime-local"
+              value={dateTime}
+              onChange={(e) => setDateTime(e.target.value)}
+            />
+            <button onClick={handleAddTask}>Add</button>
+          </div>
 
-            <div style={{ flex: 1 }}>
-              {item.isEditing ? (
-                <>
-                  <input
-                    type="text"
-                    value={item.editText}
-                    onChange={(e) => {
+          <div className="filter-section">
+            <button onClick={() => setFilter('all')} className={filter === 'all' ? 'active-filter' : ''}>All</button>
+            <button onClick={() => setFilter('completed')} className={filter === 'completed' ? 'active-filter' : ''}>Completed</button>
+            <button onClick={() => setFilter('pending')} className={filter === 'pending' ? 'active-filter' : ''}>Pending</button>
+          </div>
+
+          <ul className="task-list">
+            {filteredTasks.map((item) => (
+              <li key={item._id}>
+                <input type="checkbox" checked={item.completed} onChange={() => toggleCompleted(item._id)} />
+                <div style={{ flex: 1 }}>
+                  {item.isEditing ? (
+                    <>
+                      <input
+                        type="text"
+                        value={item.editText}
+                        onChange={(e) => {
+                          const updated = tasks.map((task) =>
+                            task._id === item._id ? { ...task, editText: e.target.value } : task
+                          );
+                          setTasks(updated);
+                        }}
+                      />
+                      <button onClick={() => saveEditedTask(item._id)}>Save</button>
+                    </>
+                  ) : (
+                    <>
+                      <span className={item.completed ? 'task-text completed' : 'task-text'}>
+                        {item.text}
+                      </span>
+                      {item.date && (
+                        <div className="task-date">
+                          📅 {new Date(item.date).toLocaleString()}
+                        </div>
+                      )}
+                      {item.completed && <div className="completed-label">✅ Completed</div>}
+                    </>
+                  )}
+                </div>
+
+                {!item.isEditing && (
+                  <>
+                    <button onClick={() => {
                       const updated = tasks.map((task) =>
-                        task._id === item._id
-                          ? { ...task, editText: e.target.value }
-                          : task
+                        task._id === item._id ? { ...task, isEditing: true, editText: task.text } : task
                       );
                       setTasks(updated);
-                    }}
-                  />
-                  <button onClick={() => saveEditedTask(item._id)}>Save</button>
-                </>
-              ) : (
-                <>
-                  <span
-                    className={item.completed ? 'task-text completed' : 'task-text'}
-                  >
-                    {item.text}
-                  </span>
-                  {item.date && (
-                    <div className="task-date">
-                      📅 {new Date(item.date).toLocaleString()}
-                    </div>
-                  )}
-                  {item.completed && <div className="completed-label">✅ Completed</div>}
-                </>
-              )}
-            </div>
+                    }}>
+                      Edit
+                    </button>
+                    <button onClick={() => deleteTask(item._id)}>Delete</button>
+                  </>
+                )}
+              </li>
+            ))}
+          </ul>
 
-            {!item.isEditing && (
-              <>
-                <button
-                  onClick={() => {
-                    const updated = tasks.map((task) =>
-                      task._id === item._id
-                        ? { ...task, isEditing: true, editText: task.text }
-                        : task
-                    );
-                    setTasks(updated);
-                  }}
-                >
-                  Edit
-                </button>
-                <button onClick={() => deleteTask(item._id)}>Delete</button>
-              </>
-            )}
-          </li>
-        ))}
-      </ul>
-
-      <ToastContainer position="bottom-right" autoClose={2000} />
+          <ToastContainer position="bottom-right" autoClose={2000} />
+        </>
+      )}
     </div>
   );
 };
